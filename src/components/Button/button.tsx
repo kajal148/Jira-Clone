@@ -6,7 +6,7 @@ interface ButtonProps {
 export const Button = (props: ButtonProps) => {
     const {text, onClick} = props;
 
-    if(!onClick) return;
+    // if(!onClick) return;
 
     return (
         <div onClick={onClick} data-testid="button-test">
