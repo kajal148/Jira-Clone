@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BoardType {
+  SPRINT
+  KANBAN
+}
+
+enum TicketStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+model Board {
+  id          String        @id @default(cuid()) //generate a uuid itself
+  type        BoardType
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  columns     BoardColumn[]
+  BoardTicket BoardTicket[]
+}
+
+model BoardColumn {
+  id          String       @id @default(cuid()) //generate a uuid itself
+  position    Int
+  label       TicketStatus @default(TODO)
+  board       Board        @relation(fields: [boardId], references: [id])
+  boardId     String       @unique
+  BoardTicket BoardTicket?
+}
+
+model BoardTicket {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  assignedUser  User         @relation("assigned", fields: [assignedTo], references: [id])
+  assignedTo    String
+  reportedUser  User         @relation("reported", fields: [reportedBy], references: [id])
+  reportedBy    String
+  boardColumn   BoardColumn  @relation(fields: [boardColumnId], references: [id])
+  boardColumnId String       @unique
+  status        TicketStatus
+  board         Board        @relation(fields: [boardId], references: [id])
+  boardId       String
+  storyPoints   Int
+  postition     Int
+  comments      Comment[]
+}
+
+model Comment {
+  id            String      @id @default(cuid())
+  description   String
+  commenter     User        @relation(fields: [writtenby], references: [id])
+  writtenby     String
+  createdAt     DateTime
+  boardTicket   BoardTicket @relation(fields: [boardTicketId], references: [id])
+  boardTicketId String
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String?
+  email          String?
+  emailVerified  Boolean?
+  image          String?
+  comments       Comment[]
+  assignedTicket BoardTicket[] @relation("assigned")
+  reportedTicket BoardTicket[] @relation("reported")
+}
